@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Dubbing AI Studio - 내 목소리로 다국어 더빙</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            neon: '#38bdf8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.35);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between custom-scrollbar">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 glass-panel sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-microphone-lines text-white text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-sky-400 to-emerald-300 bg-clip-text text-transparent">VOICE DUB AI</span>
+                    <span class="text-xs text-slate-400 ml-2 px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700">Chatterbox Multilingual</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>로컬 AI 모델 준비 완료 (24kHz)</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full space-y-10">
+
+        <!-- Hero Section -->
+        <div class="text-center space-y-3 max-w-3xl mx-auto">
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
+                유튜브 영상을 <span class="bg-gradient-to-r from-sky-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">내 목소리 그대로</span> 11개 국어로 더빙
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base">
+                유튜브 링크만 넣으면 STT 음성인식 · 타임스탬프 추출 · 다국어 번역 · AI 음성복제 · 고화질 영상 합성을 한 번에 완성합니다.
+            </p>
+        </div>
+
+        <!-- Step 1: YouTube URL Input -->
+        <section class="glass-panel p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
+            <div class="flex items-center space-x-3">
+                <span class="flex items-center justify-center w-7 h-7 rounded-full bg-sky-500/20 text-sky-400 text-sm font-bold border border-sky-500/30">1</span>
+                <h2 class="text-lg font-semibold text-white">유튜브 링크 입력</h2>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-grow">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                        <i class="fa-brands fa-youtube text-red-500 text-lg"></i>
+                    </div>
+                    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..."
+                           class="w-full pl-12 pr-4 py-3.5 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-sm sm:text-base">
+                </div>
+                <button id="fetchInfoBtn" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl border border-slate-700 font-medium transition-all flex items-center justify-center space-x-2 text-sm whitespace-nowrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>영상 정보 확인</span>
+                </button>
+            </div>
+
+            <!-- Video Preview Card (Hidden initially) -->
+            <div id="videoInfoCard" class="hidden bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center transition-all animate-fadeIn">
+                <img id="videoThumb" src="" alt="Thumbnail" class="w-full sm:w-48 h-28 object-cover rounded-lg border border-slate-700">
+                <div class="space-y-1.5 flex-grow">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/10 text-red-400 border border-red-500/20 font-medium">YouTube</span>
+                        <span id="videoDuration" class="text-xs text-slate-400"></span>
+                    </div>
+                    <h3 id="videoTitle" class="text-base font-bold text-white line-clamp-1"></h3>
+                    <p id="videoUploader" class="text-xs text-slate-400 flex items-center space-x-1">
+                        <i class="fa-solid fa-user-circle"></i>
+                        <span></span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Configuration & Target Languages -->
+        <section class="glass-panel p-6 sm:p-8 rounded-2xl shadow-xl space-y-8">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center space-x-3">
+                    <span class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold border border-emerald-500/30">2</span>
+                    <h2 class="text-lg font-semibold text-white">더빙 언어 및 목소리 구간 설정</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" id="selectAllBtn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">전체 선택</button>
+                    <button type="button" id="deselectAllBtn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">전체 해제</button>
+                </div>
+            </div>
+
+            <!-- Voice Extraction Slider -->
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-sliders text-sky-400"></i>
+                        <span class="text-sm font-semibold text-slate-200">내 목소리 샘플 구간 (Chatterbox 레퍼런스)</span>
+                    </div>
+                    <span class="text-xs text-slate-400">모노 24kHz 추출 (권장: 15~25초)</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>시작 지점: <strong id="voiceStartVal" class="text-sky-400">0</strong>초</span>
+                        </div>
+                        <input type="range" id="voiceStartInput" min="0" max="60" value="0" step="1"
+                               class="w-full accent-sky-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>샘플 길이: <strong id="voiceDurVal" class="text-emerald-400">20</strong>초</span>
+                        </div>
+                        <input type="range" id="voiceDurInput" min="10" max="30" value="20" step="1"
+                               class="w-full accent-emerald-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11 Target Languages Grid -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-3">생성할 타겟 언어 (11개 국어 선택)</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="langGrid">
+                    <!-- Languages will be rendered dynamically with badges -->
+                </div>
+            </div>
+
+            <!-- Start Action Button -->
+            <div class="pt-2">
+                <button id="startDubbingBtn" class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white font-bold text-lg shadow-xl shadow-sky-500/20 glow-hover transition-all flex items-center justify-center space-x-3 group">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xl group-hover:rotate-12 transition-transform"></i>
+                    <span>AI 다국어 목소리 더빙 시작하기</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 3: Progress & Real-time Logs (Visible during execution) -->
+        <section id="progressSection" class="hidden glass-panel p-6 sm:p-8 rounded-2xl shadow-xl space-y-6 border border-sky-500/30">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-4 h-4 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>
+                    <h3 class="text-lg font-bold text-white" id="currentStepTitle">AI 더빙 작업을 진행하고 있습니다...</h3>
+                </div>
+                <span id="progressPercent" class="text-xl font-extrabold text-sky-400">0%</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 border border-slate-800 overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <!-- Status Logs Terminal -->
+            <div class="bg-black/60 rounded-xl p-4 border border-slate-800 font-mono text-xs text-slate-300 space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar" id="logsTerminal">
+                <div class="text-slate-500">[시스템] 파이프라인 대기 중...</div>
+            </div>
+        </section>
+
+        <!-- Step 4: Final Results Section (Visible after completion) -->
+        <section id="resultsSection" class="hidden space-y-8 animate-fadeIn">
+            <!-- Summary Banner -->
+            <div class="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 to-slate-900 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">모든 언어 더빙이 성공적으로 완성되었습니다! 🎉</h2>
+                        <p class="text-xs text-slate-400 mt-0.5" id="resultSummaryText">선택한 언어별 음성, 영상 및 자막이 생성되었습니다.</p>
+                    </div>
+                </div>
+                <a id="downloadAllZipBtn" href="#" download class="w-full md:w-auto px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-zipper text-base"></i>
+                    <span>모든 결과물 일괄 다운로드 (.ZIP)</span>
+                </a>
+            </div>
+
+            <!-- Voice Sample & STT Subtitles Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- My Voice Sample Reference -->
+                <div class="glass-panel p-6 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-white font-semibold text-sm">
+                            <i class="fa-solid fa-user-voice text-sky-400"></i>
+                            <span>추출된 내 목소리 레퍼런스</span>
+                        </div>
+                        <span class="text-xs text-slate-400">24kHz WAV</span>
+                    </div>
+                    <audio id="voiceSampleAudio" controls class="w-full"></audio>
+                    <p class="text-xs text-slate-400">
+                        Chatterbox 모델이 이 목소리의 음색과 억양을 복제하여 11개 국어 음성을 생성했습니다.
+                    </p>
+                </div>
+
+                <!-- STT Subtitles Table -->
+                <div class="glass-panel p-6 rounded-2xl lg:col-span-2 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-white font-semibold text-sm">
+                            <i class="fa-solid fa-closed-captioning text-emerald-400"></i>
+                            <span>인식된 컨텐츠 STT 자막 (초 단위)</span>
+                        </div>
+                        <a id="downloadKoSrt" href="#" download class="text-xs text-sky-400 hover:underline flex items-center space-x-1">
+                            <i class="fa-solid fa-download"></i>
+                            <span>한국어 SRT 다운로드</span>
+                        </a>
+                    </div>
+                    <div class="max-h-40 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/40">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-900 text-slate-400 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-3 w-12 text-center">#</th>
+                                    <th class="py-2 px-3 w-28">시간 (초)</th>
+                                    <th class="py-2 px-3">자막 내용</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sttTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Language Showcase Tabs & Players -->
+            <div class="glass-panel p-6 sm:p-8 rounded-2xl space-y-6 shadow-xl">
+                <div class="flex items-center justify-between flex-wrap gap-4 border-b border-slate-800 pb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-language text-sky-400"></i>
+                        <span>다국어 더빙 플레이어 & 다운로드</span>
+                    </h3>
+                    <!-- Language Selection Tabs -->
+                    <div class="flex flex-wrap gap-1.5" id="resultTabs">
+                        <!-- Tab buttons populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Active Language Content Panel -->
+                <div id="activeLangPanel" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+                    <!-- Dubbed Audio Player Card -->
+                    <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-slate-200 flex items-center space-x-2">
+                                <i class="fa-solid fa-headphones text-sky-400"></i>
+                                <span>생성된 더빙 오디오</span>
+                            </span>
+                            <a id="downloadLangAudio" href="#" download class="text-xs px-3 py-1.5 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-500/20 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-download"></i>
+                                <span>WAV 다운로드</span>
+                            </a>
+                        </div>
+                        <audio id="activeLangAudio" controls class="w-full"></audio>
+                        <div class="p-3 bg-black/40 rounded-lg border border-slate-800/80">
+                            <span class="text-xs text-slate-400 block mb-1">번역된 전체 스크립트:</span>
+                            <p id="activeLangText" class="text-xs text-slate-200 line-clamp-3"></p>
+                        </div>
+                    </div>
+
+                    <!-- Dubbed Video Player Card -->
+                    <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-slate-200 flex items-center space-x-2">
+                                <i class="fa-solid fa-film text-emerald-400"></i>
+                                <span>더빙 합성 비디오 (MP4)</span>
+                            </span>
+                            <a id="downloadLangVideo" href="#" download class="text-xs px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-download"></i>
+                                <span>MP4 다운로드</span>
+                            </a>
+                        </div>
+                        <video id="activeLangVideo" controls class="w-full rounded-lg bg-black max-h-60 object-contain"></video>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 glass-panel py-6 text-center text-xs text-slate-500">
+        <p>© 2026 Voice Dubbing AI Studio · Powered by Chatterbox Multilingual & Faster-Whisper</p>
+    </footer>
+
+    <!-- App Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
+

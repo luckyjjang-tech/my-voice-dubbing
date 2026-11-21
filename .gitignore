@@ -1,0 +1,27 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Output directories & Media Files
+dubbing_output/
+dubbing_outputs/
+temp/
+*.wav
+*.mp3
+*.mp4
+*.srt
+*.zip
+
+# OS / Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
