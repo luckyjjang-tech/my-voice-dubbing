@@ -16,7 +16,7 @@ def run_dubbing_process(
     selected_langs: list,
     voice_start: float,
     voice_duration: float,
-    progress=gr.Progress(track_tqdm=True)
+    progress=gr.Progress(track_tqdm=False)
 ):
     if not youtube_url or not youtube_url.strip():
         return (

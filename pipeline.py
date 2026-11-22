@@ -89,7 +89,7 @@ class DubbingPipeline:
             lang_name = lang_info.get('name', lang_code)
             chatterbox_code = lang_info.get('chatterbox', lang_code)
 
-            update_progress(current_progress, f"[{i+1}/{len(target_langs)}] '{lang_name}' 번역 및 AI 목소리 생성 중...")
+            update_progress(current_progress, f"[{i+1}/{len(target_langs)}] '{lang_name}' 번역 및 AI 목소리 생성 준비 중...")
 
             # 1. Translate
             translated_segments = self.translator.translate_segments(segments, lang_code)
@@ -99,24 +99,31 @@ class DubbingPipeline:
             srt_path = os.path.join(output_base_dir, f"subtitles_{lang_code}.srt")
             self.transcriber.export_srt(translated_segments, srt_path)
 
-            # 2. Synthesize audio
+            # 2. Synthesize audio with sub-progress callback
             audio_out_path = os.path.join(output_base_dir, f"dubbed_{lang_code}.wav")
+            
+            def sub_prog(curr, total, text_preview):
+                sub_pct = current_progress + (curr / max(total, 1)) * (lang_progress_step * 0.8)
+                update_progress(sub_pct, f"[{i+1}/{len(target_langs)}] '{lang_name}' 음성 생성 중 ({curr}/{total} 구간)...")
+
             try:
-                # If we have timed segments, generate synchronized dubbing
+                # If we have timed segments, generate synchronized dubbing with chunking
                 if segments and len(segments) > 1:
                     self.synthesizer.synthesize_timed_dubbing(
                         translated_segments=translated_segments,
                         lang_code=chatterbox_code,
                         voice_sample_path=voice_sample_path,
                         total_duration=video_duration,
-                        output_path=audio_out_path
+                        output_path=audio_out_path,
+                        progress_callback=sub_prog
                     )
                 else:
                     self.synthesizer.synthesize_text(
                         text=tr_full_text,
                         lang_code=chatterbox_code,
                         voice_sample_path=voice_sample_path,
-                        output_path=audio_out_path
+                        output_path=audio_out_path,
+                        progress_callback=sub_prog
                     )
             except Exception as e:
                 logger.error(f"Failed to synthesize for {lang_code}: {e}")
